@@ -14,6 +14,24 @@ const { initDb, all, get, run } = require('./lib/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// FIX 5B: Apply a restrictive Content Security Policy to every response.
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self'",
+      "img-src 'self' data:",
+      "object-src 'none'",
+      "base-uri 'none'",
+      "frame-ancestors 'none'",
+    ].join('; ')
+  );
+
+  next();
+});
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -201,14 +219,29 @@ try {
   // on the page can read it via document.cookie and the browser attaches it
   // to cross-site requests.
   // Fix idea: add HttpOnly and SameSite (and Secure when served over HTTPS).
-  res.setHeader('Set-Cookie', `sid=${token}; Path=/`);
+  const secureFlag = req.secure ? '; Secure' : '';
+
+res.setHeader(
+  'Set-Cookie',
+  `sid=${token}; Path=/; HttpOnly; SameSite=Strict${secureFlag}`
+);
   res.redirect('/me');
 });
 
 app.get('/logout', (req, res) => {
   const sid = parseCookies(req).sid;
-  if (sid) sessions.delete(sid);
-  res.setHeader('Set-Cookie', 'sid=; Path=/; Max-Age=0');
+
+  if (sid) {
+    sessions.delete(sid);
+  }
+
+  const secureFlag = req.secure ? '; Secure' : '';
+
+  res.setHeader(
+    'Set-Cookie',
+    `sid=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict${secureFlag}`
+  );
+
   res.redirect('/');
 });
 
