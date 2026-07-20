@@ -19,6 +19,9 @@
     const note = decodeURIComponent(location.hash.replace(/^#note=/, ''));
 
     // ---- FIX 4 (client, DOM-based XSS) ----------------------------------
-    bannerEl.innerHTML = `<div class="banner">📎 Shared note: ${note}</div>`;
+    const banner = document.createElement('div');
+banner.className = 'banner';
+banner.textContent = `📎 Shared note: ${note}`;
+bannerEl.replaceChildren(banner);
   }
 })();

@@ -249,15 +249,15 @@ app.get('/listing/:id', (req, res) => {
   // Fix idea: HTML-encode the stored body on output (and/or sanitize on
   //   input). Do the same wherever else user text is printed.
   const commentsHtml = comments.length
-    ? comments
-        .map(
-          (c) => `<div class="comment">
-             <p class="comment-body">${c.body}</p>
-             <p class="comment-meta">— ${c.author}, ${c.created_at}</p>
-           </div>`
-        )
-        .join('')
-    : '<p>No comments yet. Be the first!</p>';
+  ? comments
+      .map(
+        (c) => `<div class="comment">
+           <p class="comment-body">${escapeHtml(c.body)}</p>
+           <p class="comment-meta">— ${escapeHtml(c.author)}, ${escapeHtml(c.created_at)}</p>
+         </div>`
+      )
+      .join('')
+  : '<p>No comments yet. Be the first!</p>';
 
   // Description comes from a trusted seed row, so it is printed as-is.
   const body = `
