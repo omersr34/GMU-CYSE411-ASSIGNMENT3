@@ -91,26 +91,34 @@ app.get('/', (req, res) => {
 // Search
 // ===========================================================================
 app.get('/search', (req, res) => {
-  const q = req.query.q || '';
-  const sort = req.query.sort || 'created_at DESC';
+  const q = typeof req.query.q === 'string' ? req.query.q : '';
 
-  // ---- FIX 2: SQL INJECTION (data extraction) ---------------------------
-  // The search term AND the sort column are concatenated straight into the
-  // SQL text, so the visitor controls part of the query, not just its inputs.
-  // A crafted term can UNION in rows from other tables; a crafted sort value
-  // can smuggle in arbitrary SQL.
-  // Fix idea: bind the search value with a "?" placeholder, and choose the
-  //   ORDER BY expression from a fixed allow-list (you cannot bind an
-  //   identifier the way you bind a value).
+  const requestedSort =
+    typeof req.query.sort === 'string'
+      ? req.query.sort
+      : 'created_at DESC';
+
+  const allowedSorts = {
+    'created_at DESC': 'created_at DESC',
+    species: 'species ASC',
+    title: 'title ASC',
+    'title DESC': 'title DESC',
+  };
+
+  const sort = allowedSorts[requestedSort] || 'created_at DESC';
+
   const sql =
     `SELECT id, title, species, location FROM listings ` +
-    `WHERE title LIKE '%${q}%' OR species LIKE '%${q}%' ` +
+    `WHERE title LIKE ? OR species LIKE ? ` +
     `ORDER BY ${sort}`;
+
+  const searchValue = `%${q}%`;
 
   let rows = [];
   let error = null;
+
   try {
-    rows = all(sql);
+    rows = all(sql, [searchValue, searchValue]);
   } catch (e) {
     error = e.message;
   }
