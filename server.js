@@ -164,15 +164,15 @@ app.post('/login', (req, res) => {
   // (e.g. a username of  curator' --  comments the password check away).
   // Fix idea: use a parameterized query so inputs are treated as pure data.
   const sql =
-    `SELECT id, username FROM users ` +
-    `WHERE username = '${username}' AND password = '${password}'`;
+  `SELECT id, username FROM users ` +
+  `WHERE username = ? AND password = ?`;
 
-  let user = null;
-  try {
-    user = get(sql);
-  } catch (e) {
-    // fall through to failure
-  }
+let user = null;
+try {
+  user = get(sql, [username, password]);
+} catch (e) {
+  // Fall through to login failure.
+}
 
   if (!user) return res.redirect('/login?failed=1');
 
