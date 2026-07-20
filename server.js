@@ -36,6 +36,14 @@ function currentUser(req) {
   const sid = parseCookies(req).sid;
   return sid && sessions.has(sid) ? sessions.get(sid) : null;
 }
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // ---------------------------------------------------------------------------
 // HTML layout helper. All pages share this shell.
@@ -137,7 +145,8 @@ app.get('/search', (req, res) => {
   // The raw search term is echoed back into the HTML response, so whatever
   // the visitor typed is parsed by the browser as markup.
   // Fix idea: HTML-encode any untrusted value before it lands in the page.
-  const heading = `<h1>Search</h1><p class="note">Showing results for “${q}”</p>`;
+  const safeQ = escapeHtml(q);
+  const heading = `<h1>Search</h1><p class="note">Showing results for “${safeQ}”</p>`;
 
   const bodyErr = error ? `<p class="error">Query error: ${error}</p>` : '';
   const list = rows.length ? `<div class="grid">${results}</div>` : '<p>No matches.</p>';
